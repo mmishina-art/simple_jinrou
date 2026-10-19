@@ -1,0 +1,8 @@
+node_modules/
+dist/
+shots/
+dist-preview/
+dev-dist/
+playwright-report/
+test-results/
+.venv/
