@@ -7,17 +7,54 @@ import { preview } from 'vite';
 import { mkdirSync, rmSync } from 'node:fs';
 
 /** 撮る画面。open は、ページを開いたあと、その画面を出すための操作。 */
+/** ゲームの準備から始めて、役職の確認の「渡す」画面まで進む */
+const startGame = async (page) => {
+  await page.click('#start-button');
+  await page.click('#setup-start');
+};
+/** 全員の役職の確認を済ませて、1日目の夜にする */
+const revealAll = async (page) => {
+  await startGame(page);
+  for (let i = 0; i < 5; i++) {
+    await page.click('#open-button');
+    await page.click('#done-button');
+  }
+};
+/** 夜の行動を全員ぶん済ませて、朝にする */
+const nightAll = async (page) => {
+  await revealAll(page);
+  for (let i = 0; i < 5; i++) {
+    await page.click('#open-button');
+    await page.click('.choice');
+    await page.click('#decide-button');
+    await page.click('#done-button');
+  }
+};
 const SCREENS = [
   { name: 'home' },
   { name: 'install', open: async (page) => page.click('#install-open') },
   { name: 'backup', open: async (page) => page.click('.backup summary') },
+  { name: 'setup', open: async (page) => page.click('#start-button') },
+  { name: 'pass', open: startGame },
+  { name: 'role', open: async (page) => { await startGame(page); await page.click('#open-button'); } },
+  { name: 'night', open: async (page) => { await revealAll(page); await page.click('#open-button'); await page.click('.choice'); } },
+  { name: 'morning', open: nightAll },
+  { name: 'day', open: async (page) => { await nightAll(page); await page.click('#next-button'); } },
+  {
+    name: 'end',
+    open: async (page) => {
+      // デバッグモードにして（バージョンを 5 回タップ）、すぐに人狼陣営の勝ちにする
+      for (let i = 0; i < 5; i++) await page.click('#version-line');
+      await startGame(page);
+      await page.click('[aria-label^="すぐに人狼陣営"]');
+    },
+  },
 ];
 
-/** 撮る大きさ。dark はダークモード（端末設定に従う配色のアプリで確認する）。 */
+/** 撮る大きさ。dark はダークモード（端末設定に従う配色のアプリで確認する）。このアプリは暗い固定なので撮らない。 */
 const SIZES = [
   { name: 'phone', width: 390, height: 844 },
   { name: 'se', width: 375, height: 667 },
-  { name: 'phone-dark', width: 390, height: 844, dark: true },
 ];
 
 const OUT = 'shots';
@@ -43,6 +80,8 @@ try {
     for (const screen of SCREENS) {
       const page = await context.newPage();
       page.on('pageerror', (e) => errors.push(`${size.name}/${screen.name}: ${e.message}`));
+      // 確認（「途中のゲームを消しますか？」など）は「OK」で進める
+      page.on('dialog', (d) => void d.accept());
       await page.goto(url);
       await page.waitForFunction(() => globalThis.__appStarted === true);
       if (screen.open) await screen.open(page);

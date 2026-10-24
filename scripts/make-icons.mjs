@@ -4,8 +4,9 @@
 import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
-const BG = [0x1f, 0x6f, 0xeb];
-const FG = [0xff, 0xff, 0xff];
+// 夜空の色に、黄色の三日月
+const BG = [0x11, 0x13, 0x1c];
+const FG = [0xe9, 0xc4, 0x6a];
 
 function crc32(buf) {
   let c;
@@ -42,8 +43,11 @@ function png(size, figure, fullBleed) {
       const dx = Math.max(Math.abs(x - c) - (c - radius), 0);
       const dy = Math.max(Math.abs(y - c) - (c - radius), 0);
       const inBg = fullBleed || dx * dx + dy * dy <= radius * radius;
-      // 図柄: 中央の丸
-      const inFg = (x - c) ** 2 + (y - c) ** 2 <= (half * 0.8) ** 2;
+      // 図柄: 三日月（中央の丸から、右上にずらした丸を切り抜く）
+      const r = half * 0.8;
+      const inMoon = (x - c) ** 2 + (y - c) ** 2 <= r ** 2;
+      const inBite = (x - c - r * 0.45) ** 2 + (y - c + r * 0.3) ** 2 <= (r * 0.85) ** 2;
+      const inFg = inMoon && !inBite;
       const px = inFg ? FG : BG;
       const o = row + 1 + x * 4;
       raw[o] = px[0];
@@ -78,6 +82,6 @@ for (const [name, data] of Object.entries(files)) writeFileSync(new URL(name, ou
 
 writeFileSync(
   new URL('icon.svg', out),
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#1f6feb"/><circle cx="256" cy="256" r="143" fill="#fff"/></svg>\n`,
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><mask id="m"><rect width="512" height="512" fill="#fff"/><circle cx="320" cy="213" r="122" fill="#000"/></mask></defs><rect width="512" height="512" rx="112" fill="#11131c"/><circle cx="256" cy="256" r="143" fill="#e9c46a" mask="url(#m)"/></svg>\n`,
 );
 console.log('icons generated:', [...Object.keys(files), 'icon.svg'].join(', '));
