@@ -24,6 +24,14 @@ export function save(key: string, value: unknown): void {
   }
 }
 
+export function remove(key: string): void {
+  try {
+    localStorage.removeItem(`${PREFIX}-${key}`);
+  } catch {
+    // 消せなくても続行する
+  }
+}
+
 // ブラウザに「保存データを消さないで」と頼む（消されにくくなる）
 export function requestPersist(): void {
   void navigator.storage?.persist?.().catch(() => undefined);

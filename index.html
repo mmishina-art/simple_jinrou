@@ -4,45 +4,76 @@
     <meta charset="UTF-8" />
     <!-- ピンチ拡大は許可する（user-scalable=no / maximum-scale は入れない） -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#1f6feb" />
+    <meta name="theme-color" content="#11131c" />
     <meta name="app-id" content="__APP_ID__" />
-    <meta name="description" content="PWAアプリのテンプレート" />
+    <meta name="description" content="1台のスマホを回して遊ぶ、GMいらずの人狼ゲーム" />
+    <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <!-- iPhone のホーム画面アプリ: ステータスバーは不透明にする（暗い固定・端末設定に従う: black / 明るい固定: default）。
          black-translucent にすると、ステータスバーの下に入った内容を iOS がぼかして、画面の上端の文字が読みにくくなる -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="PWAアプリ" />
+    <meta name="apple-mobile-web-app-title" content="シンプル人狼" />
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <title>PWAアプリ</title>
+    <title>シンプル人狼</title>
   </head>
   <body>
     <main id="app">
       <header class="header">
-        <h1>PWAアプリ</h1>
-        <button id="sound-button" type="button" class="icon-button" aria-label="音" aria-pressed="true">🔊</button>
+        <h1>🌙 シンプル人狼</h1>
+        <div>
+          <button id="quit-button" type="button" class="quit-button" hidden>やめる</button>
+          <button id="sound-button" type="button" class="icon-button" aria-label="音" aria-pressed="true">🔊</button>
+        </div>
       </header>
 
-      <!-- サンプル: タップ回数を数える。本番では置き換える -->
-      <section class="card">
-        <p class="count" id="count" aria-live="polite">0</p>
-        <p class="muted">最高記録: <span id="best">0</span></p>
-        <button id="tap-button" type="button" class="primary">タップ</button>
-        <button id="reset-button" type="button">リセット</button>
+      <!-- タイトル（最初の画面） -->
+      <section id="home-screen">
+        <section class="card center hero">
+          <p class="hero__moon" aria-hidden="true">🐺</p>
+          <p>1台のスマホを順番に回して遊ぶ人狼ゲーム。<br>進行役（GM）は、アプリがします。</p>
+          <p class="muted small">4〜12人で遊べます。</p>
+          <button id="start-button" type="button" class="primary big">あたらしく始める</button>
+          <button id="resume-button" type="button" class="big" hidden>続きから</button>
+        </section>
+        <p class="center" id="stats" aria-live="polite"></p>
+
+        <details class="panel">
+          <summary>遊び方</summary>
+          <ol>
+            <li>人数・名前・役職の数を決めます。</li>
+            <li>スマホを1人ずつ回して、自分の役職をこっそり確認します。</li>
+            <li><strong>夜</strong>: 1人ずつ回して、こっそり行動します（人狼は襲う人、占い師は占う人を選ぶ）。行動がない人も、怪しい人を選びます（だれが役職持ちか、見分けられないように）。</li>
+            <li><strong>朝</strong>: 襲われた人がわかります。</li>
+            <li><strong>昼</strong>: 話し合って、1人ずつ回して投票します。いちばん票の多い人が処刑されます（同じ票数なら決選投票、それでも同じなら抽選）。</li>
+            <li>人狼が全員いなくなれば<strong>村人陣営</strong>の勝ち。人狼の数が人間と同じになれば<strong>人狼陣営</strong>の勝ちです。</li>
+          </ol>
+          <h3>役職</h3>
+          <ul id="role-list" class="role-list"></ul>
+        </details>
+
+        <details class="panel backup">
+          <summary>記録のバックアップ</summary>
+          <p class="muted">勝敗の記録は、このブラウザの中にだけ保存されています。ファイルに残しておくと、消えたときに戻せます。</p>
+          <button id="backup-export" type="button">ファイルに書き出す</button>
+          <label class="file-button">ファイルから読み込む<input id="backup-import" type="file" accept="application/json,.json" hidden></label>
+          <p id="backup-message" class="muted" role="status"></p>
+        </details>
+
+        <button id="install-open" type="button" class="link">📲 アプリとしてインストールする方法</button>
+
+        <p class="muted version" id="version-line">v<span id="version"></span></p>
       </section>
 
-      <details class="backup">
-        <summary>記録のバックアップ</summary>
-        <p class="muted">記録は、このブラウザの中にだけ保存されています。ファイルに残しておくと、消えたときに戻せます。</p>
-        <button id="backup-export" type="button">ファイルに書き出す</button>
-        <label class="file-button">ファイルから読み込む<input id="backup-import" type="file" accept="application/json,.json" hidden></label>
-        <p id="backup-message" class="muted" role="status"></p>
-      </details>
+      <!-- ゲームの準備（src/setup.ts） -->
+      <section id="setup-screen" hidden></section>
 
-      <button id="install-open" type="button" class="link">📲 アプリとしてインストールする方法</button>
+      <!-- ゲームの進行（src/play.ts） -->
+      <section id="play-screen" hidden></section>
 
-      <p class="muted version" id="version-line">v<span id="version"></span></p>
+      <!-- 結果の読み上げ用（画面には出さない） -->
+      <p id="announce" class="visually-hidden" aria-live="polite"></p>
     </main>
 
     <!-- インストール方法（最初の画面から開く） -->

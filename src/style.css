@@ -1,32 +1,28 @@
 /* 色は :root の変数に集約する（色の直書きをしない）。
-   配色方針（端末設定に従う / 明るい固定 / 暗い固定）はアプリごとに CLAUDE.md で決める。
-   このテンプレートは「端末設定に従う」例。 */
+   配色方針: 暗い固定（夜の村の雰囲気。CLAUDE.md の「このアプリの方針」）。theme-color / background_color も同じ暗い色。 */
 :root {
+  color-scheme: dark;
   /* iPhone の画面の上端は、システムがぼかす帯がある。文字がその帯に入らないよう、安全領域の上に余白を足す。
      上端の余白は、env(safe-area-inset-top) だけにせず、この --safe-top を使う（simple_chess などで起きた症状への対応）。 */
   --top-gap: 24px;
   --safe-top: calc(env(safe-area-inset-top) + var(--top-gap));
-  --bg: #f6f8fa;
-  --surface: #ffffff;
-  --text: #1f2328;
-  --muted: #59636e;
-  --border: #d1d9e0;
-  --primary: #1f6feb;
+  --bg: #11131c;
+  --surface: #1b1e2b;
+  --surface-strong: #262a3b;
+  --text: #ece8df;
+  --muted: #a6a4b5;
+  --border: #3a3e54;
+  --primary: #b8392f;
   --primary-text: #ffffff;
+  /* 陣営の色（色だけで伝えず、文字でも陣営を書く） */
+  --village: #e9c46a;
+  --wolf: #ef7a6d;
+  --selected: #e9c46a;
+  --selected-text: #11131c;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow: rgb(0 0 0 / 0.4);
   --debug: #d29922;
   --debug-text: #1f2328;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --text: #e6edf3;
-    --muted: #9198a1;
-    --border: #3d444d;
-    --primary: #2f81f7;
-    --primary-text: #ffffff;
-  }
 }
 
 * {
@@ -77,14 +73,7 @@ h1 {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px 16px;
-  text-align: center;
-}
-
-.count {
-  font-size: 4rem;
-  font-weight: 700;
-  margin: 0;
+  padding: 16px;
 }
 
 .muted {
@@ -138,7 +127,7 @@ button.primary {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.2);
+  box-shadow: 0 6px 20px var(--shadow);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -151,7 +140,7 @@ button.primary {
 button.link {
   border: 0;
   background: transparent;
-  color: var(--primary);
+  color: var(--village);
   text-decoration: underline;
   display: block;
   margin: 12px auto 0;
@@ -170,7 +159,7 @@ button.link {
 }
 
 .install-dialog::backdrop {
-  background: rgb(0 0 0 / 0.5);
+  background: var(--overlay);
 }
 
 .install-dialog h2 {
@@ -204,7 +193,7 @@ button.link {
   margin: 8px 0 0;
 }
 
-.backup {
+.panel {
   margin-top: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -212,7 +201,7 @@ button.link {
   background: var(--surface);
 }
 
-.backup summary {
+.panel summary {
   min-height: 44px;
   display: flex;
   align-items: center;
@@ -250,6 +239,10 @@ button.link {
   border: 2px solid var(--debug);
   border-radius: 10px;
 }
+/* デバッグモードのあいだは、パネルが画面の下のボタンに重ならないよう、下に余白を足す */
+body.debug-on main {
+  padding-bottom: calc(max(24px, env(safe-area-inset-bottom)) + 64px);
+}
 .debug-panel__title {
   font-size: 0.7rem;
   font-weight: 700;
@@ -263,4 +256,288 @@ button.link {
   background: var(--debug);
   border-color: var(--debug);
   color: var(--debug-text);
+}
+
+/* ---- 人狼の画面 ---- */
+h2 {
+  font-size: 1.2rem;
+  margin: 8px 0;
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 8px 0 4px;
+}
+
+.card + .card,
+.card + .actions,
+.card + button,
+.card + .error {
+  margin-top: 12px;
+}
+
+.center {
+  text-align: center;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+button.big {
+  display: block;
+  width: 100%;
+  margin: 12px 0 0;
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.hero__moon {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin: 0;
+}
+
+.quit-button {
+  padding: 4px 12px;
+  font-size: 0.9rem;
+}
+
+.panel ol,
+.panel ul {
+  padding-left: 1.4em;
+}
+
+.role-list li {
+  margin-bottom: 6px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.error {
+  color: var(--wolf);
+  font-weight: 700;
+  min-height: 1.6em;
+  margin: 8px 0 0;
+}
+
+.error:empty {
+  min-height: 0;
+}
+
+.note {
+  background: var(--surface-strong);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+/* 準備の画面 */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepper__label {
+  flex: 1;
+}
+
+.stepper__value {
+  min-width: 3em;
+  text-align: center;
+  font-weight: 700;
+}
+
+.stepper__button {
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+.stepper__note {
+  font-size: 0.85rem;
+}
+
+.names {
+  margin: 0;
+  padding-left: 1.8em;
+}
+
+.names li {
+  margin: 6px 0;
+}
+
+.names input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+/* 渡す画面 */
+.phase-label {
+  font-weight: 700;
+  color: var(--village);
+  margin: 0 0 8px;
+}
+
+.pass {
+  text-align: center;
+}
+
+.pass__icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin: 16px 0 8px;
+}
+
+.pass__to {
+  font-size: 1.2rem;
+}
+
+.pass__to strong {
+  font-size: 1.5rem;
+}
+
+/* 人を選ぶ */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.choice {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.choice[aria-pressed='true'] {
+  background: var(--selected);
+  border-color: var(--selected);
+  color: var(--selected-text);
+  font-weight: 700;
+}
+
+.choice[aria-pressed='true']::before {
+  content: '✓ ';
+}
+
+/* 役職のカード */
+.role-card {
+  text-align: center;
+}
+
+.role-card__mark {
+  font-size: 4rem;
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.role-card__name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.role-card__team {
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.team-village .role-card__team,
+.team-village .end__title {
+  color: var(--village);
+}
+
+.team-wolf .role-card__team,
+.team-wolf .end__title {
+  color: var(--wolf);
+}
+
+.role-line {
+  margin-top: 0;
+}
+
+.result {
+  font-size: 1.15rem;
+}
+
+/* 話し合い */
+.timer {
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin: 8px 0;
+}
+
+.players {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  text-align: left;
+}
+
+.players li {
+  padding: 8px 4px;
+  border-top: 1px solid var(--border);
+}
+
+.players li.dead {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.players li .muted {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.win-mark {
+  margin-left: 8px;
+  font-weight: 700;
+  color: var(--village);
+  display: inline-block;
+}
+
+.tally ul {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.end__mark {
+  font-size: 4rem;
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.end__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* 画面には出さず、読み上げだけ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
